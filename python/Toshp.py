@@ -41,4 +41,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    json_shp(r"D:\下载\310000.geojson",r"E:\Spatiotemporal_Data\摩拜共享单车2017年8月数据集\shroad.shp")
+    # main()
