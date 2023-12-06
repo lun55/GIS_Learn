@@ -22,7 +22,6 @@ def json_shp(jsonpath,savepath):
         将josN文件转为shp文件
         jsonpath: json文件的路径
         savepath: shp保存的路径
-
     """
     Gjson = gpd.read_file(jsonpath,encoding='utf-8')
     GDF = gpd.GeoDataFrame(Gjson)
