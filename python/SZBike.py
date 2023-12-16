@@ -4,7 +4,7 @@
 import requests,json
 import pandas as pd
 import time
-import threading
+from threading import Thread
 import os
 
 # 获取第i页的数据，每页1000行
@@ -38,17 +38,30 @@ def getHTML(i):
 # 获取第i页的数据，每页1000行 页数是从第1页开始的
 def spater(start,end,file_path):
     timesum = 0
-    start_time = time.time() 
+    start_time = time.time()
+    # 如果初值为0，将其设为1，因为页码是从1开始计算的
+    if start==0:
+        start = 1
+    
     for i in range(start,end): 
-               
-        if getHTML(str(i))=="产生异常":
-            print(f"页码数：{start}——{end}"+getHTML(str(i)))
-            with open(file_path) as f:
-                f.close()
-            break
+        data  = getHTML(str(i))
+
+        # 如果触发异常，最多尝试10次
+        j = 0
+        while j<10 and data=="产生异常":
+            time.sleep(2)
+            print(f'出错，尝试第{j+1}次')
+            data  = getHTML(str(i))
+            j += 1
+
+        # 如果尝试10次后依旧失败，则抛出异常
+        if j==10:
+            raise ValueError('A very specific bad thing happened.')
+        
         else:
-            bike_df = pd.DataFrame(getHTML(str(i))['data'],columns=['USER_ID','COM_ID','START_TIME','END_TIME','START_LAT','START_LNG','END_LAT','END_LNG'])
-            
+
+            bike_df = pd.DataFrame(data['data'],columns=['USER_ID','COM_ID','START_TIME','END_TIME','START_LAT','START_LNG','END_LAT','END_LNG'])
+
             # 判断是否存在文件
             if os.path.exists(file_path)==False:
                 # 先创建一个文件,无列索引        
@@ -56,18 +69,21 @@ def spater(start,end,file_path):
             else:
                 # 数据追加写入，减少内存开支    
                 bike_df.to_csv(file_path,header=False, index=False,mode='a')
-                print(i)
+                # print("第"+str(i)+"页")
 
     end_time = time.time()
     timesum = end_time - start_time
     print(f"页码数：{start}——{end}，耗时：{timesum:.001f}\r",end='')
 
-# class bikeThread():
-#     def run():
-#         pass
+
 if __name__ == "__main__":
    
-    bike_path = r'C:\Users\LMQ\Desktop\深圳共享单车'
-    # for i in range(10):
-    bike_file = os.path.join(bike_path,'1')
-    spater(1,100,bike_file)
+    bike_path = r'E:\Data\深圳共享单车'
+
+    # 多线程执行,提高数据下载速度
+    for i in range(120,140):
+        page_start = i*1000
+        page_end = page_start + 1000
+        bike_file = os.path.join(bike_path,f"bike{page_start}-{page_end}.csv")
+        Thread(target=spater, args=(page_start, page_end, bike_file), name="Thread-"+str(i)).start()
+    
