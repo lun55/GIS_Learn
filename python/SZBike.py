@@ -38,7 +38,7 @@ def getHTML(i):
 # 获取第i页的数据，每页1000行 页数是从第1页开始的
 def spater(start,end,file_path):
     timesum = 0
-    start_time = time.time()
+    start_time = time.time()  # 开始时间
     # 如果初值为0，将其设为1，因为页码是从1开始计算的
     if start==0:
         start = 1
@@ -71,19 +71,26 @@ def spater(start,end,file_path):
                 bike_df.to_csv(file_path,header=False, index=False,mode='a')
                 # print("第"+str(i)+"页")
 
-    end_time = time.time()
+    end_time = time.time()  # 结束时间
     timesum = end_time - start_time
-    print(f"页码数：{start}——{end}，耗时：{timesum:.001f}\r",end='')
+    print(f"页码数：{start}——{end}，耗时：{timesum:.001f}\n",end='')
 
 
 if __name__ == "__main__":
    
+    # 文件保存的路径
     bike_path = r'E:\Data\深圳共享单车'
 
+    t = []  # 线程列表 
     # 多线程执行,提高数据下载速度
-    for i in range(120,140):
+    for i in range(0,20):
         page_start = i*1000
         page_end = page_start + 1000
         bike_file = os.path.join(bike_path,f"bike{page_start}-{page_end}.csv")
-        Thread(target=spater, args=(page_start, page_end, bike_file), name="Thread-"+str(i)).start()
+        t.append(Thread(target=spater, args=(page_start, page_end, bike_file), name="Thread-"+str(i)))
+        t[i].start()
+    for j in t:
+        print('a')
+        j.join() 
+    print('程序执行结束\n')
     
