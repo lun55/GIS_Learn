@@ -4,6 +4,10 @@
 import requests,json
 import pandas as pd
 import time
+import threading
+import os
+
+# 获取第i页的数据，每页1000行
 def getHTML(i):
     url = "https://opendata.sz.gov.cn/api/29200_00403627/1/service.xhtml"
     try:
@@ -23,7 +27,7 @@ def getHTML(i):
             "appKey": '9d676000c3354c84a3d081594fba6e7a'
         }
         response = requests.get(url, params=formdata, headers=header)
-        
+    
         if response.status_code == 200:
             data = json.loads(response.text)
             return data
@@ -31,27 +35,39 @@ def getHTML(i):
     except:
         return "产生异常"
 
-
-def spater(start,end,filename):
+# 获取第i页的数据，每页1000行 页数是从第1页开始的
+def spater(start,end,file_path):
     timesum = 0
+    start_time = time.time() 
     for i in range(start,end): 
-        start_time = time.time() 
-        
+               
         if getHTML(str(i))=="产生异常":
-            print(getHTML(str(i)))
+            print(f"页码数：{start}——{end}"+getHTML(str(i)))
+            with open(file_path) as f:
+                f.close()
+            break
         else:
-            df1 = pd.DataFrame(getHTML(str(i))['data'],columns=['USER_ID','COM_ID','START_TIME','END_TIME','START_LAT','START_LNG','END_LAT','END_LNG'])
+            bike_df = pd.DataFrame(getHTML(str(i))['data'],columns=['USER_ID','COM_ID','START_TIME','END_TIME','START_LAT','START_LNG','END_LAT','END_LNG'])
             
-            if i==start:        
-                df1.to_csv(r"C:\\Users\\LMQ\\Desktop\\"+filename+".csv",index=None)       
+            # 判断是否存在文件
+            if os.path.exists(file_path)==False:
+                # 先创建一个文件,无列索引        
+                bike_df.to_csv(file_path,index=False)       
             else:
-                df = pd.read_csv(r"C:\\Users\\LMQ\\Desktop\\"+filename+".csv")
-                df = pd.concat([df,df1])
-                df.to_csv(r"C:\\Users\\LMQ\\Desktop\\"+filename+".csv",index=None)
-        print()
-        end_time = time.time()
-        timesum += end_time - start_time
-        print(f"{(i-start)/(end-start)*100:0.1f}%"+f"------>运行时间：{end_time - start_time:.001f} 秒; 总时间：{timesum:.001f}\r",end='')
+                # 数据追加写入，减少内存开支    
+                bike_df.to_csv(file_path,header=False, index=False,mode='a')
+                print(i)
 
+    end_time = time.time()
+    timesum = end_time - start_time
+    print(f"页码数：{start}——{end}，耗时：{timesum:.001f}\r",end='')
+
+# class bikeThread():
+#     def run():
+#         pass
 if __name__ == "__main__":
-    spater(300,400,'共享单车2')
+   
+    bike_path = r'C:\Users\LMQ\Desktop\深圳共享单车'
+    # for i in range(10):
+    bike_file = os.path.join(bike_path,'1')
+    spater(1,100,bike_file)
