@@ -61,6 +61,7 @@ def clustering_dist(points, means):
     totaldist = totaldist/n
     return nearests, totaldist
 
+# 初始化聚类，确定初始聚类中心，
 def initk(points, k, init):
     """
     Initialization for k-means
